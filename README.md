@@ -216,3 +216,34 @@ aws cloudwatch get-metric-statistics \
   --dimensions $DIMENSIONS \
   --region us-west-2
 ```
+
+## What Gets Uploaded to DynamoDB
+
+Each message dictionary after it's been through the `classify_content` function. A DynamoDB item looks something like:
+
+```json
+{
+  "bucket": "content-1781686871-vyrapd",
+  "object_id": "a3f7b2c1-4d5e-6f78-9a0b-1c2d3e4f5g6h.txt",
+  "message": "Win a free iPhone! Click here to claim your prize.",
+  "spam": true,
+  "pii": false
+}
+```
+
+### Fields
+
+| Field | Description |
+|-------|-------------|
+| `bucket` | Which S3 bucket the content came from |
+| `object_id` | The S3 key (the UUID filename you created) |
+| `message` | The actual text content |
+| `spam` | Did Bedrock classify it as spam? (`true`/`false`) |
+| `pii` | Did Bedrock detect personally identifiable information? (`true`/`false`) |
+
+### How It's Used
+
+DynamoDB ends up being a table of all ingested content with moderation labels attached. A front-end app could then query this table and decide:
+
+- **Don't show this to users** → if `spam` is `true`
+- **Redact this content** → if `pii` is `true`
