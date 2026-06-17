@@ -152,7 +152,7 @@ Click **Deploy** in the Lambda code editor to save and deploy your changes.
 
 ---
 
-## Lab: Testing the Pipeline
+## Testing the Pipeline
 
 ### Configure AWS CLI
 
@@ -216,42 +216,3 @@ aws cloudwatch get-metric-statistics \
   --dimensions $DIMENSIONS \
   --region us-west-2
 ```
-
----
-
-## Design Notes
-
-### Content Identification
-
-The S3 object key is used as a content identifier. Alternatives for production:
-
-- Metadata lookup (e.g., author)
-- Hash-based ID (SHA256)
-- UUID
-
-### Configuration Management
-
-This lab uses constants for simplicity. In production, consider:
-
-- Environment variables
-- AWS Systems Manager Parameter Store
-
-### Libraries
-
-For production workloads processing SNS/SQS events frequently, consider [Powertools for AWS Lambda](https://docs.powertools.aws.dev/lambda/python/latest/) for event parsing, logging, and error handling.
-
-### Model Accuracy
-
-Responses from Bedrock have an element of randomness. To improve accuracy in production:
-
-- Use a more capable model
-- Use a fine-tuned model
-- Combine multiple models
-
-### Production Usage
-
-The moderation status stored in DynamoDB can be consumed by front-end applications to:
-
-- Hide spam or inappropriate content
-- Flag content for human review
-- Route content to moderation queues
