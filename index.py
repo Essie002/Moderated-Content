@@ -61,15 +61,50 @@ def fetch_content(objects):
 
 
 def invoke_bedrock(prompt):
-    # TODO Implement me
+    payload = {
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "inferenceConfig": {
+            "max_new_tokens": 3,
+        }
+    }
+    body = json.dumps(payload)
+    response = bedrock_client.invoke_model(body=body, modelId=MODEL_ID)
+    return json.loads(response.get("body").read())
 
 
 def classify_content(messages):
-    # TODO Implement me
+    for message in messages:
+        message['spam'] = False
+        prompt = SPAM_PROMPT_TEMPLATE.replace("MESSAGE", message["message"])
+        response = invoke_bedrock(prompt)
+        for result in response.get("results", []):
+            if "true" in result['output']['message']['content'][0]['text'].lower():
+                message["spam"] = True
+
+        message['pii'] = False
+        prompt = PII_PROMPT_TEMPLATE.replace("MESSAGE", message["message"])
+        response = invoke_bedrock(prompt)
+        for result in response.get("results", []):
+            if "true" in result['output']['message']['content'][0]['text'].lower():
+                message["pii"] = True
+
+    return messages
 
 
 def upload_to_dynamodb(messages):
-    # TODO Implement me
+    serializer = TypeSerializer()
+    for message in messages:
+        item = {key: serializer.serialize(value) for key, value in message.items()}
+        dynamodb_client.put_item(Item=item, TableName=DYNAMODB_TABLE_NAME)
 
 
 def handler(event, context):
